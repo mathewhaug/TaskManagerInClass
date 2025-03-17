@@ -7,10 +7,14 @@
         android:icon="@mipmap/ic_launcher"
         android:label="Task Manager"
         android:theme="@style/Theme.TaskManager">
-        <activity android:name=".MainActivity"
+
+        <activity android:name=".TaskDetailsActivity"/>
+        <activity
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

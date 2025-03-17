@@ -1,3 +1,4 @@
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -6,6 +7,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.matthaug.taskmanager.R
 import com.matthaug.taskmanager.Task
+import com.matthaug.taskmanager.TaskDetailsActivity
 
 class TaskAdapter(
     private val taskList: List<Task>,
@@ -50,6 +52,17 @@ class TaskAdapter(
             // Handle Delete button click
             deleteButton.setOnClickListener {
                 listener.onDeleteClick(task)
+            }
+
+            // Handle task click to open TaskDetailsActivity
+            itemView.setOnClickListener {
+                val context = itemView.context
+                val intent = Intent(context, TaskDetailsActivity::class.java).apply {
+                    putExtra("taskName", task.name)
+                    putExtra("taskDueDate", task.dueDate)
+                    putExtra("taskPriority", task.priority)
+                }
+                context.startActivity(intent)
             }
         }
     }
