@@ -1,14 +1,21 @@
 package com.matthaug.taskmanager
 
-import TaskAdapter
+import android.content.Context
 import android.os.Bundle
-import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 
+private const val FILE_NAME = "tasks.txt"
 
-class MainActivity : AppCompatActivity(), TaskAdapter.TaskItemListener, AddTaskFragment.AddTaskListener {
+class MainActivity : AppCompatActivity(), TaskAdapter.TaskItemListener {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var taskAdapter: TaskAdapter
@@ -18,8 +25,8 @@ class MainActivity : AppCompatActivity(), TaskAdapter.TaskItemListener, AddTaskF
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Add some dummy tasks
-        addDummyTasks()
+        // Load saved tasks from file
+        taskList.addAll(loadTasksFromFile())
 
         // Setup RecyclerView with GridLayoutManager for 2 columns
         recyclerView = findViewById(R.id.recyclerView)
@@ -27,55 +34,56 @@ class MainActivity : AppCompatActivity(), TaskAdapter.TaskItemListener, AddTaskF
         taskAdapter = TaskAdapter(taskList, this)
         recyclerView.adapter = taskAdapter
 
-        // Add Task Button click listener
-        val addTaskButton: Button = findViewById(R.id.addTaskButton)
-        addTaskButton.setOnClickListener {
-            showAddTaskFragment()
+        // Handle FloatingActionButton Click to Add Task
+        val addTaskFab: FloatingActionButton = findViewById(R.id.addTaskFab)
+        addTaskFab.setOnClickListener {
+            findNavController(R.id.fragmentContainer).navigate(R.id.action_mainFragment_to_addTaskFragment)
         }
     }
 
-    // Method to add dummy tasks
-    private fun addDummyTasks() {
-        taskList.add(Task(1, "Complete Homework", "12/05/2025", "High"))
-        taskList.add(Task(2, "Buy Groceries", "15/05/2025", "Medium"))
-        taskList.add(Task(3, "Call Mom", "13/05/2025", "Low"))
-        taskList.add(Task(4, "Pay Bills", "14/05/2025", "High"))
-        taskList.add(Task(5, "Plan Vacation", "20/05/2025", "Low"))
-        taskList.add(Task(6, "Cry", "16/05/2025", "High"))
-    }
-
+    // Handle task edit click event
     override fun onEditClick(task: Task) {
-        showAddTaskFragment(task)
+        val bundle = Bundle().apply {
+            putInt("taskId", task.id.toInt())
+            putString("taskName", task.name)
+            putString("taskDueDate", task.dueDate)
+            putString("taskPriority", task.priority)
+        }
+        findNavController(R.id.fragmentContainer).navigate(R.id.action_mainFragment_to_addTaskFragment, bundle)
     }
 
     override fun onDeleteClick(task: Task) {
         taskList.remove(task)
         taskAdapter.notifyDataSetChanged()
+        saveTasksToFile() // Save updated task list
     }
 
-    private fun showAddTaskFragment(task: Task? = null) {
-        val addTaskFragment = AddTaskFragment()
-        addTaskFragment.setListener(this)
-        task?.let {
-            addTaskFragment.setTaskToEdit(it)
+    private fun saveTasksToFile() {
+        try {
+            val json = Gson().toJson(taskList)
+            openFileOutput(FILE_NAME, Context.MODE_PRIVATE).use { output ->
+                output.write(json.toByteArray())
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, addTaskFragment)
-            .addToBackStack(null)
-            .commit()
     }
 
-    // AddTaskListener implementation to handle task added or updated
-    override fun onTaskAdded(task: Task) {
-        taskList.add(task)
-        taskAdapter.notifyItemInserted(taskList.size - 1)
-    }
+    private fun loadTasksFromFile(): MutableList<Task> {
+        val loadedTasks = mutableListOf<Task>()
+        try {
+            val file = File(filesDir, FILE_NAME)
+            if (!file.exists()) return loadedTasks
 
-    override fun onTaskUpdated(task: Task) {
-        val index = taskList.indexOfFirst { it.id == task.id }
-        if (index != -1) {
-            taskList[index] = task
-            taskAdapter.notifyItemChanged(index)
+            val json = file.readText()
+            val type = object : TypeToken<List<Task>>() {}.type
+            val taskListFromFile: List<Task> = Gson().fromJson(json, type)
+            loadedTasks.addAll(taskListFromFile)
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
+        return loadedTasks
     }
 }

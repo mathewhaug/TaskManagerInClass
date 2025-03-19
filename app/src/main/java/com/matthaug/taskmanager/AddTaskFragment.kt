@@ -1,82 +1,84 @@
 package com.matthaug.taskmanager
 
 import android.app.DatePickerDialog
-import android.icu.util.Calendar
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
-class AddTaskFragment : Fragment(), View.OnClickListener {
+class AddTaskFragment : Fragment() {
 
-    private var listener: AddTaskListener? = null
     private var taskToEdit: Task? = null
-
-    private lateinit var taskNameEditText: EditText
     private lateinit var taskDueDateEditText: EditText
-    private lateinit var taskPriorityEditText: EditText
-
-    interface AddTaskListener {
-        fun onTaskAdded(task: Task)
-        fun onTaskUpdated(task: Task)
-    }
+    private val calendar = Calendar.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_add_task, container, false)
-    }
+        val view = inflater.inflate(R.layout.fragment_add_task, container, false)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        taskNameEditText = view.findViewById(R.id.taskName)
+        val taskNameEditText: EditText = view.findViewById(R.id.taskName)
         taskDueDateEditText = view.findViewById(R.id.taskDueDate)
-        taskPriorityEditText = view.findViewById(R.id.taskPriority)
-
-        // Set click listener on Due Date EditText to show DatePickerDialog
-        taskDueDateEditText.setOnClickListener(this)
-
+        val taskPriorityEditText: EditText = view.findViewById(R.id.taskPriority)
         val saveButton: Button = view.findViewById(R.id.saveButton)
+
+        //making DatePicker opens on clicking the due date field - annoying
+        taskDueDateEditText.apply {
+            isFocusable = false
+            isClickable = true //This is redundent, it just wasnt working for me so I added it, why it works idk
+            setOnClickListener {
+                showDatePickerDialog()
+            }
+        }
+
+        // Retrieve task data if editing using built in arguments from bundle
+        arguments?.let {
+            val taskId = it.getInt("taskId", -1)
+            val taskName = it.getString("taskName", "")
+            val taskDueDate = it.getString("taskDueDate", "")
+            val taskPriority = it.getString("taskPriority", "")
+
+            if (taskId != -1) {
+                taskToEdit = Task(taskId, taskName!!, taskDueDate!!, taskPriority!!)
+                taskNameEditText.setText(taskName)
+                taskDueDateEditText.setText(taskDueDate)
+                taskPriorityEditText.setText(taskPriority)
+            }
+        }
+
         saveButton.setOnClickListener {
             val taskName = taskNameEditText.text.toString()
             val taskDueDate = taskDueDateEditText.text.toString()
             val taskPriority = taskPriorityEditText.text.toString()
-
-            val task = Task(
-                id = taskToEdit?.id ?: (System.currentTimeMillis() / 1000),
-                name = taskName,
-                dueDate = taskDueDate,
-                priority = taskPriority
-            )
-
-            if (taskToEdit != null) {
-                listener?.onTaskUpdated(task)
-            } else {
-                listener?.onTaskAdded(task)
+            //seeding task if with time if one is not provided, to ensure it is unique
+            val taskId = taskToEdit?.id ?: (System.currentTimeMillis() / 1000).toInt()
+            //SavedStateHandle does not support passing custom objects, so we convert and pass a bundle instead
+            val bundle = Bundle().apply {
+                putInt("taskId", taskId.toInt())
+                putString("taskName", taskName)
+                putString("taskDueDate", taskDueDate)
+                putString("taskPriority", taskPriority)
             }
-            parentFragmentManager.popBackStack()
+
+            val navController = findNavController()
+            // Pass the bundle to the previous fragment to add to the list
+            navController.previousBackStackEntry?.savedStateHandle?.set("newTask", bundle) // Pass the bundle instead of Task
+            // Navigate back to the previous fragment
+            navController.popBackStack()
         }
 
-        taskToEdit?.let {
-            taskNameEditText.setText(it.name)
-            taskDueDateEditText.setText(it.dueDate)
-            taskPriorityEditText.setText(it.priority)
-        }
-    }
-
-    override fun onClick(view: View?) {
-        if (view == taskDueDateEditText) {
-            showDatePickerDialog()
-        }
+        return view
     }
 
     private fun showDatePickerDialog() {
-        val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
         val day = calendar.get(Calendar.DAY_OF_MONTH)
@@ -84,7 +86,7 @@ class AddTaskFragment : Fragment(), View.OnClickListener {
         val datePickerDialog = DatePickerDialog(
             requireContext(),
             { _, selectedYear, selectedMonth, selectedDay ->
-                val formattedDate = "${selectedDay}/${selectedMonth + 1}/$selectedYear"
+                val formattedDate = String.format(Locale.getDefault(), "%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
                 taskDueDateEditText.setText(formattedDate)
             },
             year, month, day
@@ -92,13 +94,4 @@ class AddTaskFragment : Fragment(), View.OnClickListener {
 
         datePickerDialog.show()
     }
-
-    fun setListener(listener: AddTaskListener) {
-        this.listener = listener
-    }
-
-    fun setTaskToEdit(task: Task) {
-        this.taskToEdit = task
-    }
 }
-

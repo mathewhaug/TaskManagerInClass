@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/mainFragment">
+
+    <!-- Main Fragment (Task List) -->
+    <fragment
+        android:id="@+id/mainFragment"
+        android:name="com.matthaug.taskmanager.MainFragment"
+        android:label="Task List"
+        tools:layout="@layout/fragment_main">
+
+        <!-- Action: Navigate to TaskDetailsFragment -->
+        <action
+            android:id="@+id/action_mainFragment_to_taskDetailsFragment"
+            app:destination="@id/taskDetailsFragment" />
+
+        <!-- Action: Navigate to AddTaskFragment -->
+        <action
+            android:id="@+id/action_mainFragment_to_addTaskFragment"
+            app:destination="@id/addTaskFragment" />
+    </fragment>
+
+    <!-- Task Details Fragment -->
+    <fragment
+        android:id="@+id/taskDetailsFragment"
+        android:name="com.matthaug.taskmanager.TaskDetailsFragment"
+        android:label="Task Details"
+        tools:layout="@layout/fragment_task_details" />
+
+    <!-- Add Task Fragment -->
+    <fragment
+        android:id="@+id/addTaskFragment"
+        android:name="com.matthaug.taskmanager.AddTaskFragment"
+        android:label="Add Task"
+        tools:layout="@layout/fragment_add_task" />
+</navigation>

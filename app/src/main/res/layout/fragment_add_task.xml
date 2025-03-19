@@ -20,7 +20,7 @@
         android:hint="Due Date (DD/MM/YYYY)"
         android:textSize="14sp"
         android:focusable="false"
-        android:clickable="true" />
+        android:clickable="true"/>
 
     <!-- Task Priority -->
     <EditText

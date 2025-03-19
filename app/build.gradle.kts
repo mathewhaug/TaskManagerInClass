@@ -1,8 +1,8 @@
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
-}
 
+plugins {
+    id("com.android.application")
+    id("kotlin-android")
+}
 android {
     namespace = "com.matthaug.taskmanager"
     compileSdk = 35
@@ -26,6 +26,11 @@ android {
             )
         }
     }
+
+    buildFeatures {
+        viewBinding = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -34,20 +39,11 @@ android {
         jvmTarget = "1.8"
     }
 }
-
-dependencies {
-
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.activity)
-    implementation("androidx.constraintlayout:constraintlayout:2.1.0")
-    implementation(libs.androidx.recyclerview)
-    //New Dependencies Added
-    implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
-    implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-
+dependencies { // App Level build.gradle.kts
+    implementation("com.google.android.material:material:1.9.0")
+    //New dependencies
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(libs.firebase.crashlytics.buildtools)
 }
