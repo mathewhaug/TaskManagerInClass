@@ -14,13 +14,17 @@ import android.icu.util.Currency
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
+import com.google.gson.Gson
 import com.matthaug.taskmanager.R
 import com.matthaug.taskmanager.TaskAdapter
 import com.matthaug.taskmanager.network.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
+private const val FILE_NAME = "tasks.json"
 class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
 
     private lateinit var recyclerView: RecyclerView
@@ -38,6 +42,10 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
 
         taskAdapter = TaskAdapter(taskList, this)
         recyclerView.adapter = taskAdapter
+
+        //File io
+        taskList.clear()
+        taskList.addAll(loadTasksFromFile())
 
         val addTaskButton: FloatingActionButton = view.findViewById(R.id.addTaskFab)
         addTaskButton.setOnClickListener {
@@ -74,6 +82,24 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
         }
     }
 
+    //Details view function
+    override fun onItemClick(task: Task) {
+        val bundle = Bundle().apply {
+            putString("taskName", task.name)
+            putString("taskDueDate", task.dueDate)
+            putString("taskPriority", task.priority)
+            putBoolean("costAssociated", task.costAssociated)
+            putString("currency", task.currency.toString())
+            putDouble("cost", task.cost)
+            putBoolean("completed", task.completed)
+            putBoolean("overdue", task.overdue)
+        }
+
+        findNavController().navigate(R.id.action_mainFragment_to_taskDetailsFragment, bundle)
+    }
+
+
+
     override fun onEditClick(task: Task) {
         val bundle = Bundle().apply {
             putInt("taskId", task.id.toInt())
@@ -87,6 +113,8 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
     override fun onDeleteClick(task: Task) {
         taskList.remove(task)
         taskAdapter.notifyDataSetChanged()
+        saveTasksToFile()
+
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -116,6 +144,21 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
                     taskList.add(newTask)
                     taskAdapter.notifyItemInserted(taskList.size - 1)
                 }
+                saveTasksToFile()
             }
+    }
+    private fun saveTasksToFile() {
+        val json = Gson().toJson(taskList)
+        val file = File(requireContext().filesDir, FILE_NAME)
+        file.writeText(json)
+    }
+
+    private fun loadTasksFromFile(): MutableList<Task> {
+        val file = File(requireContext().filesDir, FILE_NAME)
+        if (!file.exists()) return mutableListOf()
+
+        val json = file.readText()
+        val type = object : TypeToken<MutableList<Task>>() {}.type
+        return Gson().fromJson(json, type)
     }
 }

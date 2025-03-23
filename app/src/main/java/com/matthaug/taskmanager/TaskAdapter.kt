@@ -16,6 +16,7 @@ class TaskAdapter(
     interface TaskItemListener {
         fun onEditClick(task: Task)
         fun onDeleteClick(task: Task)
+        fun onItemClick(task: Task) //Details functionality
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
@@ -51,6 +52,11 @@ class TaskAdapter(
             deleteButton.setOnClickListener {
                 listener.onDeleteClick(task)
             }
+
+            itemView.setOnClickListener {
+                listener.onItemClick(task)
+            }
+
         }
     }
 }
