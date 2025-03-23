@@ -1,6 +1,4 @@
-package com.matthaug.taskmanager
-
-import android.icu.util.Currency
+package com.matthaug.taskmanager.models
 
 data class Task(
     val id: Number,

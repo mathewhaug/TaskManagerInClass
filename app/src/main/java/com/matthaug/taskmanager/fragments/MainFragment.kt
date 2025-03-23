@@ -1,4 +1,4 @@
-package com.matthaug.taskmanager
+package com.matthaug.taskmanager.fragments
 
 import android.content.Context
 import android.os.Bundle
@@ -6,21 +6,22 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
-//Gson Import
 import com.google.gson.Gson
+
+import com.matthaug.taskmanager.R
+import com.matthaug.taskmanager.models.Task
+import com.matthaug.taskmanager.TaskAdapter
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 
 private const val FILE_NAME = "tasks.txt"
-
 class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
 
     private lateinit var recyclerView: RecyclerView

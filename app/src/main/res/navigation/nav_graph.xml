@@ -7,7 +7,7 @@
     <!-- Main Fragment (Task List) -->
     <fragment
         android:id="@+id/mainFragment"
-        android:name="com.matthaug.taskmanager.MainFragment"
+        android:name="com.matthaug.taskmanager.fragments.MainFragment"
         android:label="Task List"
         tools:layout="@layout/fragment_main">
 
@@ -25,14 +25,14 @@
     <!-- Task Details Fragment -->
     <fragment
         android:id="@+id/taskDetailsFragment"
-        android:name="com.matthaug.taskmanager.TaskDetailsFragment"
+        android:name="com.matthaug.taskmanager.fragments.TaskDetailsFragment"
         android:label="Task Details"
         tools:layout="@layout/fragment_task_details" />
 
     <!-- Add Task Fragment -->
     <fragment
         android:id="@+id/addTaskFragment"
-        android:name="com.matthaug.taskmanager.AddTaskFragment"
+        android:name="com.matthaug.taskmanager.fragments.AddTaskFragment"
         android:label="Add Task"
         tools:layout="@layout/fragment_add_task" />
 </navigation>

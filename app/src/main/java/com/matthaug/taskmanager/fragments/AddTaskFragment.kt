@@ -1,4 +1,4 @@
-package com.matthaug.taskmanager
+package com.matthaug.taskmanager.fragments
 
 import android.app.DatePickerDialog
 import android.os.Bundle
@@ -9,7 +9,8 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import java.text.SimpleDateFormat
+import com.matthaug.taskmanager.R
+import com.matthaug.taskmanager.models.Task
 import java.util.Calendar
 import java.util.Locale
 
@@ -86,7 +87,13 @@ class AddTaskFragment : Fragment() {
         val datePickerDialog = DatePickerDialog(
             requireContext(),
             { _, selectedYear, selectedMonth, selectedDay ->
-                val formattedDate = String.format(Locale.getDefault(), "%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
+                val formattedDate = String.format(
+                    Locale.getDefault(),
+                    "%02d/%02d/%04d",
+                    selectedDay,
+                    selectedMonth + 1,
+                    selectedYear
+                )
                 taskDueDateEditText.setText(formattedDate)
             },
             year, month, day

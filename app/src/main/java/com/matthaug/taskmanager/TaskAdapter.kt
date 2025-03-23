@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.matthaug.taskmanager.models.Task
 
 class TaskAdapter(
     private val taskList: MutableList<Task>,
