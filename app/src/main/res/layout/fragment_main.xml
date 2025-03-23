@@ -27,7 +27,14 @@
         android:layout_weight="1"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
 
-    <!-- Add Task Button -->
+    <Button
+        android:id="@+id/motivateMeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Motivate Me"
+        android:layout_gravity="center"
+        android:layout_marginTop="8dp" />
+
     <!-- Floating Action Button to Add Task -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addTaskFab"

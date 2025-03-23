@@ -9,25 +9,6 @@
     android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
-    <!-- RecyclerView to display the list of tasks -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-    <!-- Floating Action Button to add new tasks -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addTaskFab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_input_add"
-        app:backgroundTint="@color/teal_700"
-        app:layout_anchorGravity="bottom|end"
-        android:layout_gravity="end"
-        android:layout_margin="16dp"
-        android:contentDescription="Add a Task Button"/>
-
     <!-- Navigation Container -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainer"

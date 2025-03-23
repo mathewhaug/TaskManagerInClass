@@ -6,17 +6,22 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 
 import com.matthaug.taskmanager.R
 import com.matthaug.taskmanager.models.Task
 import com.matthaug.taskmanager.TaskAdapter
+import com.matthaug.taskmanager.network.RetrofitInstance
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -48,6 +53,13 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
         addTaskButton.setOnClickListener {
             findNavController().navigate(R.id.action_mainFragment_to_addTaskFragment)
         }
+
+        //Motivation Button
+        val motivateMeButton: Button = view.findViewById(R.id.motivateMeButton)
+        motivateMeButton.setOnClickListener {
+            fetchRandomQuote()
+        }
+
 
         return view
     }
@@ -98,6 +110,25 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
                 saveTasksToFile(requireContext(), taskList)
             }
     }
+    //Function to parse quote from API and display it in a Snackbar
+    private fun fetchRandomQuote() {
+        lifecycleScope.launch {
+            try {
+                val quotes = RetrofitInstance.api.getQuotes()
+                if (quotes.isNotEmpty()) {
+                    val quote = quotes[0]
+                    val message = "\"${quote.q}\" - ${quote.a}"
+                    Snackbar.make(requireView(), message, Snackbar.LENGTH_LONG).show()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace() //troubleshooting
+                Snackbar.make(requireView(), "Failed to fetch quote: ${e.message}", Snackbar.LENGTH_LONG).show()
+            }
+        }
+        //Snackbar.make(requireView(), "API test success!", Snackbar.LENGTH_SHORT).show()
+
+    }
+
 
     private fun saveTasksToFile(context: Context, taskList: List<Task>) {
         try {
