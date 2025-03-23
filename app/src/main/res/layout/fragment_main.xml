@@ -6,7 +6,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".fragments.MainFragment">
+    tools:context=".fragments.MainFragment"
+    android:fitsSystemWindows="true">
 
     <!-- Title -->
     <TextView
@@ -33,7 +34,8 @@
         android:layout_height="wrap_content"
         android:text="Motivate Me"
         android:layout_gravity="center"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        />
 
     <!-- Floating Action Button to Add Task -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton

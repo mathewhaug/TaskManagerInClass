@@ -1,104 +1,143 @@
 package com.matthaug.taskmanager.fragments
 
 import android.app.DatePickerDialog
+import android.icu.text.SimpleDateFormat
+import android.icu.util.Calendar
+import android.icu.util.Currency
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
+import android.widget.*
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.matthaug.taskmanager.R
 import com.matthaug.taskmanager.models.Task
-import java.util.Calendar
-import java.util.Locale
+import java.util.*
 
 class AddTaskFragment : Fragment() {
 
     private var taskToEdit: Task? = null
-    private lateinit var taskDueDateEditText: EditText
-    private val calendar = Calendar.getInstance()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val view = inflater.inflate(R.layout.fragment_add_task, container, false)
 
         val taskNameEditText: EditText = view.findViewById(R.id.taskName)
-        taskDueDateEditText = view.findViewById(R.id.taskDueDate)
+        val taskDueDateEditText: EditText = view.findViewById(R.id.taskDueDate)
         val taskPriorityEditText: EditText = view.findViewById(R.id.taskPriority)
+        val costAssociatedCheckBox: CheckBox = view.findViewById(R.id.costAssociatedCheckBox)
+        val taskCostEditText: EditText = view.findViewById(R.id.taskCost)
+        val currencySpinner: Spinner = view.findViewById(R.id.currencySpinner)
+        val completedCheckBox: CheckBox = view.findViewById(R.id.completedCheckBox)
         val saveButton: Button = view.findViewById(R.id.saveButton)
 
-        //making DatePicker opens on clicking the due date field - annoying
-        taskDueDateEditText.apply {
-            isFocusable = false
-            isClickable = true //This is redundent, it just wasnt working for me so I added it, why it works idk
-            setOnClickListener {
-                showDatePickerDialog()
-            }
+        // Populate currency spinner with all avail currencies
+        val currencies = Currency.getAvailableCurrencies().map { it.currencyCode }.sorted()
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, currencies)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        currencySpinner.adapter = adapter
+
+        val defaultIndex = currencies.indexOfFirst { it.toString() == "CAD" }
+
+        if (defaultIndex >= 0) {
+            currencySpinner.setSelection(defaultIndex)
         }
 
-        // Retrieve task data if editing using built in arguments from bundle
-        arguments?.let {
-            val taskId = it.getInt("taskId", -1)
-            val taskName = it.getString("taskName", "")
-            val taskDueDate = it.getString("taskDueDate", "")
-            val taskPriority = it.getString("taskPriority", "")
 
-            if (taskId != -1) {
-                taskToEdit = Task(taskId, taskName!!, taskDueDate!!, taskPriority!!)
-                taskNameEditText.setText(taskName)
-                taskDueDateEditText.setText(taskDueDate)
-                taskPriorityEditText.setText(taskPriority)
-            }
+        // Show Date Picker
+        taskDueDateEditText.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            DatePickerDialog(
+                requireContext(),
+                { _, year, month, dayOfMonth ->
+                    val formattedDate = "%02d/%02d/%04d".format(dayOfMonth, month + 1, year)
+                    taskDueDateEditText.setText(formattedDate)
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            ).show()
+        }
+
+        // If editing, populate values
+        arguments?.let {
+            val id = it.getInt("taskId")
+            val name = it.getString("taskName") ?: ""
+            val dueDate = it.getString("taskDueDate") ?: ""
+            val priority = it.getString("taskPriority") ?: ""
+
+            taskToEdit = Task(
+                id,
+                name,
+                dueDate,
+                priority,
+                costAssociated = false,
+                currency = Currency.getInstance("CAD"),
+                cost = 0.0,
+                completed = false,
+                overdue = false
+            )
+
+            taskNameEditText.setText(name)
+            taskDueDateEditText.setText(dueDate)
+            taskPriorityEditText.setText(priority)
         }
 
         saveButton.setOnClickListener {
-            val taskName = taskNameEditText.text.toString()
-            val taskDueDate = taskDueDateEditText.text.toString()
-            val taskPriority = taskPriorityEditText.text.toString()
-            //seeding task if with time if one is not provided, to ensure it is unique
-            val taskId = taskToEdit?.id ?: (System.currentTimeMillis() / 1000).toInt()
-            //SavedStateHandle does not support passing custom objects, so we convert and pass a bundle instead
-            val bundle = Bundle().apply {
-                putInt("taskId", taskId.toInt())
-                putString("taskName", taskName)
-                putString("taskDueDate", taskDueDate)
-                putString("taskPriority", taskPriority)
-            }
+            val name = taskNameEditText.text.toString()
+            val dueDate = taskDueDateEditText.text.toString()
+            val priority = taskPriorityEditText.text.toString()
+            val costAssociated = costAssociatedCheckBox.isChecked
+            val cost = taskCostEditText.text.toString().toDoubleOrNull() ?: 0.0
+            val currency = Currency.getInstance(currencySpinner.selectedItem.toString())
+            val completed = completedCheckBox.isChecked
 
-            val navController = findNavController()
-            // Pass the bundle to the previous fragment to add to the list
-            navController.previousBackStackEntry?.savedStateHandle?.set("newTask", bundle) // Pass the bundle instead of Task
-            // Navigate back to the previous fragment
-            navController.popBackStack()
+            // Calculate overdue
+            val overdue = isOverdue(dueDate)
+
+            val newTask = Task(
+                id = taskToEdit?.id ?: (System.currentTimeMillis() / 1000).toInt(),
+                name = name,
+                dueDate = dueDate,
+                priority = priority,
+                costAssociated = costAssociated,
+                currency = currency,
+                cost = cost,
+                completed = completed,
+                overdue = overdue
+            )
+
+            //Send back via SavedStateHandle to populate list
+            findNavController().previousBackStackEntry?.savedStateHandle?.set("newTask", bundleOf(
+                "taskId" to newTask.id,
+                "taskName" to newTask.name,
+                "taskDueDate" to newTask.dueDate,
+                "taskPriority" to newTask.priority,
+                "costAssociated" to newTask.costAssociated,
+                "currency" to newTask.currency.currencyCode,
+                "cost" to newTask.cost,
+                "completed" to newTask.completed,
+                "overdue" to newTask.overdue
+            ))
+
+            findNavController().popBackStack()
         }
 
         return view
     }
 
-    private fun showDatePickerDialog() {
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-
-        val datePickerDialog = DatePickerDialog(
-            requireContext(),
-            { _, selectedYear, selectedMonth, selectedDay ->
-                val formattedDate = String.format(
-                    Locale.getDefault(),
-                    "%02d/%02d/%04d",
-                    selectedDay,
-                    selectedMonth + 1,
-                    selectedYear
-                )
-                taskDueDateEditText.setText(formattedDate)
-            },
-            year, month, day
-        )
-
-        datePickerDialog.show()
+    private fun isOverdue(dueDateStr: String): Boolean {
+        return try {
+            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val dueDate = sdf.parse(dueDateStr)
+            val today = Date()
+            dueDate != null && dueDate.before(today)
+        } catch (e: Exception) {
+            false
+        }
     }
 }

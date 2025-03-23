@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.TaskDetailsFragment">
+    android:orientation="vertical"
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/taskNameTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Task Name" />
+        android:text="Task Name"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/taskDueDateTextView"
@@ -23,5 +25,27 @@
         android:layout_height="wrap_content"
         android:text="Priority" />
 
+    <TextView
+        android:id="@+id/taskCostTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cost: (Currency)" />
 
+    <TextView
+        android:id="@+id/taskCostAssociatedTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cost Associated: Yes/No" />
+
+    <TextView
+        android:id="@+id/taskCompletedTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Completed: true/false" />
+
+    <TextView
+        android:id="@+id/taskOverdueTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Overdue: true/false" />
 </LinearLayout>

@@ -1,5 +1,6 @@
 package com.matthaug.taskmanager.fragments
 
+import android.icu.util.Currency
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,17 +17,23 @@ class TaskDetailsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_task_details, container, false)
 
-        // Retrieve data from the arguments
-        val taskName = arguments?.getString("taskName") ?: "No Name"
-        val taskDueDate = arguments?.getString("taskDueDate") ?: "No Due Date"
-        val taskPriority = arguments?.getString("taskPriority") ?: "No Priority"
+        val name = arguments?.getString("taskName", "") ?: ""
+        val dueDate = arguments?.getString("taskDueDate", "") ?: ""
+        val priority = arguments?.getString("taskPriority", "") ?: ""
+        val costAssociated = arguments?.getBoolean("costAssociated", false) ?: false
+        val cost = arguments?.getDouble("cost", 0.0) ?: 0.0
+        val currencyCode = arguments?.getString("currency", "CAD") ?: "CAD"
+        val completed = arguments?.getBoolean("completed", false) ?: false
+        val overdue = arguments?.getBoolean("overdue", false) ?: false
 
-        // Set data to the TextViews
-        view.findViewById<TextView>(R.id.taskNameTextView).text = taskName
-        view.findViewById<TextView>(R.id.taskDueDateTextView).text = taskDueDate
-        view.findViewById<TextView>(R.id.taskPriorityTextView).text = taskPriority
+        view.findViewById<TextView>(R.id.taskNameTextView).text = name
+        view.findViewById<TextView>(R.id.taskDueDateTextView).text = "Due Date: $dueDate"
+        view.findViewById<TextView>(R.id.taskPriorityTextView).text = "Priority: $priority"
+        view.findViewById<TextView>(R.id.taskCostAssociatedTextView).text = "Cost Associated: ${if (costAssociated) "Yes" else "No"}"
+        view.findViewById<TextView>(R.id.taskCostTextView).text = "Cost: ${Currency.getInstance(currencyCode).symbol}$cost"
+        view.findViewById<TextView>(R.id.taskCompletedTextView).text = "Completed: $completed"
+        view.findViewById<TextView>(R.id.taskOverdueTextView).text = "Overdue: $overdue"
 
         return view
-
     }
 }

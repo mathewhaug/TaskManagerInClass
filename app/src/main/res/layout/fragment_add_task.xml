@@ -2,7 +2,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:fitsSystemWindows="true">
 
     <!-- Task Name -->
     <EditText
@@ -29,6 +30,34 @@
         android:layout_height="wrap_content"
         android:hint="Priority (Low/Medium/High)"
         android:textSize="14sp"/>
+    <!-- Cost Associated Checkbox -->
+    <CheckBox
+        android:id="@+id/costAssociatedCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cost Associated?" />
+
+    <!-- Cost Input -->
+    <EditText
+        android:id="@+id/taskCost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Cost (ex 12.50)"
+        android:inputType="numberDecimal" />
+
+    <!-- Currency Spinner -->
+    <Spinner
+        android:id="@+id/currencySpinner"
+        android:layout_width="382dp"
+        android:layout_height="62dp" />
+
+    <!-- Completed Checkbox -->
+    <CheckBox
+        android:id="@+id/completedCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mark as Completed" />
+
 
     <!-- Save Button -->
     <Button

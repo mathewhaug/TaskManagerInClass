@@ -1,32 +1,26 @@
 package com.matthaug.taskmanager.fragments
 
-import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.matthaug.taskmanager.models.Task
+import android.icu.util.Currency
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
-import com.google.gson.Gson
-
 import com.matthaug.taskmanager.R
-import com.matthaug.taskmanager.models.Task
 import com.matthaug.taskmanager.TaskAdapter
 import com.matthaug.taskmanager.network.RetrofitInstance
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileNotFoundException
-import java.io.IOException
+import kotlinx.coroutines.withContext
 
-private const val FILE_NAME = "tasks.txt"
 class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
 
     private lateinit var recyclerView: RecyclerView
@@ -36,15 +30,11 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         val view = inflater.inflate(R.layout.fragment_main, container, false)
 
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-
-        // Prevent duplicate tasks by clearing the list before loading
-        taskList.clear()
-        taskList.addAll(loadTasksFromFile(requireContext()))
 
         taskAdapter = TaskAdapter(taskList, this)
         recyclerView.adapter = taskAdapter
@@ -54,16 +44,35 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
             findNavController().navigate(R.id.action_mainFragment_to_addTaskFragment)
         }
 
-        //Motivation Button
+        //Motivate button event listener
         val motivateMeButton: Button = view.findViewById(R.id.motivateMeButton)
         motivateMeButton.setOnClickListener {
-            fetchRandomQuote()
+            fetchMotivationalQuote()
         }
 
 
         return view
     }
 
+    private fun fetchMotivationalQuote() {
+        lifecycleScope.launch {
+            try {
+                val quotes = withContext(Dispatchers.IO) {
+                    RetrofitInstance.api.getQuotes()
+                }
+
+                if (quotes.isNotEmpty()) {
+                    val quote = quotes[0]
+                    val message = "\"${quote.q}\" - ${quote.a}"
+                    Snackbar.make(requireView(), message, Snackbar.LENGTH_LONG).show()
+                } else {
+                    Snackbar.make(requireView(), "No quote found", Snackbar.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Snackbar.make(requireView(), "Error: ${e.message}", Snackbar.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     override fun onEditClick(task: Task) {
         val bundle = Bundle().apply {
@@ -78,87 +87,35 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
     override fun onDeleteClick(task: Task) {
         taskList.remove(task)
         taskAdapter.notifyDataSetChanged()
-        saveTasksToFile(requireContext(), taskList) // Save updated list
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Observe the saved state handle for new or edited tasks
-        findNavController().currentBackStackEntry?.savedStateHandle?.getLiveData<Bundle>("newTask")
+        findNavController().currentBackStackEntry?.savedStateHandle
+            ?.getLiveData<Bundle>("newTask")
             ?.observe(viewLifecycleOwner) { bundle ->
-                val updatedTask = Task(
-                    bundle.getInt("taskId"),
-                    bundle.getString("taskName", ""),
-                    bundle.getString("taskDueDate", ""),
-                    bundle.getString("taskPriority", "")
+
+                val newTask = Task(
+                    id = bundle.getInt("taskId"),
+                    name = bundle.getString("taskName") ?: "",
+                    dueDate = bundle.getString("taskDueDate") ?: "",
+                    priority = bundle.getString("taskPriority") ?: "",
+                    costAssociated = bundle.getBoolean("costAssociated"),
+                    currency = Currency.getInstance("CAD"),
+                    cost = bundle.getDouble("cost", 0.0),
+                    completed = bundle.getBoolean("completed"),
+                    overdue = bundle.getBoolean("overdue")
                 )
 
-                // Check if the task already exists in the list
-                val index = taskList.indexOfFirst { it.id == updatedTask.id }
+                val index = taskList.indexOfFirst { it.id == newTask.id }
                 if (index != -1) {
-                    // If found, update it
-                    taskList[index] = updatedTask
+                    taskList[index] = newTask
                     taskAdapter.notifyItemChanged(index)
                 } else {
-                    // If not found, add as a new task
-                    taskList.add(updatedTask)
+                    taskList.add(newTask)
                     taskAdapter.notifyItemInserted(taskList.size - 1)
                 }
-
-                // Save the updated list to file
-                saveTasksToFile(requireContext(), taskList)
             }
-    }
-    //Function to parse quote from API and display it in a Snackbar
-    private fun fetchRandomQuote() {
-        lifecycleScope.launch {
-            try {
-                val quotes = RetrofitInstance.api.getQuotes()
-                if (quotes.isNotEmpty()) {
-                    val quote = quotes[0]
-                    val message = "\"${quote.q}\" - ${quote.a}"
-                    Snackbar.make(requireView(), message, Snackbar.LENGTH_LONG).show()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace() //troubleshooting
-                Snackbar.make(requireView(), "Failed to fetch quote: ${e.message}", Snackbar.LENGTH_LONG).show()
-            }
-        }
-        //Snackbar.make(requireView(), "API test success!", Snackbar.LENGTH_SHORT).show()
-
-    }
-
-
-    private fun saveTasksToFile(context: Context, taskList: List<Task>) {
-        try {
-            val json = Gson().toJson(taskList)
-            context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE).use { output ->
-                output.write(json.toByteArray())
-            }
-            Log.d("FileStorage", "Tasks saved successfully")
-        } catch (e: IOException) {
-            Log.e("FileStorage", "Error saving tasks: ${e.message}")
-        }
-    }
-
-    private fun loadTasksFromFile(context: Context): MutableList<Task> {
-        val taskList: MutableList<Task> = mutableListOf()
-        try {
-            val file = File(context.filesDir, FILE_NAME)
-            if (!file.exists()) return taskList
-
-            val json = file.readText()
-            val type = object : TypeToken<List<Task>>() {}.type
-            val loadedTasks: List<Task> = Gson().fromJson(json, type)
-            taskList.addAll(loadedTasks)
-
-            Log.d("FileStorage", "Tasks loaded successfully")
-        } catch (e: FileNotFoundException) {
-            Log.e("FileStorage", "File not found: ${e.message}")
-        } catch (e: IOException) {
-            Log.e("FileStorage", "Error reading file: ${e.message}")
-        }
-        return taskList
     }
 }
