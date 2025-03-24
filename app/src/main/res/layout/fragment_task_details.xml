@@ -1,51 +1,83 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:fitsSystemWindows="true">
 
-    <TextView
-        android:id="@+id/taskNameTextView"
-        android:layout_width="wrap_content"
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Task Name"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:layout_margin="8dp"
+        android:elevation="4dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="6dp"
+        app:strokeColor="?attr/colorPrimary"
+        app:strokeWidth="1dp">
 
-    <TextView
-        android:id="@+id/taskDueDateTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Due Date" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    <TextView
-        android:id="@+id/taskPriorityTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Priority" />
+            <TextView
+                android:id="@+id/taskNameTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Task Name"
+                android:textAppearance="?attr/textAppearanceHeadline6"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
 
-    <TextView
-        android:id="@+id/taskCostTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cost: (Currency)" />
+            <TextView
+                android:id="@+id/taskDueDateTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Due Date: "
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:layout_marginBottom="8dp" />
 
-    <TextView
-        android:id="@+id/taskCostAssociatedTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cost Associated: Yes/No" />
+            <TextView
+                android:id="@+id/taskPriorityTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Priority: "
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:layout_marginBottom="8dp" />
 
-    <TextView
-        android:id="@+id/taskCompletedTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Completed: true/false" />
+            <TextView
+                android:id="@+id/taskCostAssociatedTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cost Associated: "
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:layout_marginBottom="8dp" />
 
-    <TextView
-        android:id="@+id/taskOverdueTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Overdue: true/false" />
-</LinearLayout>
+            <TextView
+                android:id="@+id/taskCostTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cost: $0.00 (CAD)"
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/taskCompletedTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Completed: "
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/taskOverdueTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Overdue: "
+                android:textAppearance="?attr/textAppearanceBody1"
+                android:layout_marginBottom="8dp" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+</ScrollView>

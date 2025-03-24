@@ -65,27 +65,30 @@ class AddTaskFragment : Fragment() {
 
         // If editing, populate values
         arguments?.let {
-            val id = it.getInt("taskId")
-            val name = it.getString("taskName") ?: ""
-            val dueDate = it.getString("taskDueDate") ?: ""
-            val priority = it.getString("taskPriority") ?: ""
+            val id = it.getInt("taskId", -1)
+            if (id != -1) {
+                val name = it.getString("taskName", "")
+                val dueDate = it.getString("taskDueDate", "")
+                val priority = it.getString("taskPriority", "")
+                val costAssociated = it.getBoolean("costAssociated", false)
+                val currency = Currency.getInstance(it.getString("currency", "CAD"))
+                val cost = it.getDouble("cost", 0.0)
+                val completed = it.getBoolean("completed", false)
+                val overdue = it.getBoolean("overdue", false)
 
-            taskToEdit = Task(
-                id,
-                name,
-                dueDate,
-                priority,
-                costAssociated = false,
-                currency = Currency.getInstance("CAD"),
-                cost = 0.0,
-                completed = false,
-                overdue = false
-            )
+                taskToEdit = Task(id, name, dueDate, priority, costAssociated, currency, cost, completed, overdue)
 
-            taskNameEditText.setText(name)
-            taskDueDateEditText.setText(dueDate)
-            taskPriorityEditText.setText(priority)
+                // Populate UI
+                taskNameEditText.setText(name)
+                taskDueDateEditText.setText(dueDate)
+                taskPriorityEditText.setText(priority)
+                costAssociatedCheckBox.isChecked = costAssociated
+                taskCostEditText.setText(cost.toString())
+                completedCheckBox.isChecked = completed
+                currencySpinner.setSelection(currencies.indexOf(currency.currencyCode))
+            }
         }
+
 
         saveButton.setOnClickListener {
             val name = taskNameEditText.text.toString()
