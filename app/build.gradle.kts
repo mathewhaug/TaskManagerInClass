@@ -52,6 +52,9 @@ dependencies { // App Level build.gradle.kts
     implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation(libs.androidx.gridlayout)
+    //Work Manager
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
 
 
 }

@@ -1,5 +1,10 @@
 package com.matthaug.taskmanager.fragments
 
+//Work manager import
+import androidx.work.*
+import java.util.concurrent.TimeUnit
+
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.matthaug.taskmanager.models.Task
 import android.icu.util.Currency
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
@@ -20,6 +26,8 @@ import com.google.gson.Gson
 import com.matthaug.taskmanager.R
 import com.matthaug.taskmanager.TaskAdapter
 import com.matthaug.taskmanager.network.RetrofitInstance
+import com.matthaug.taskmanager.services.CostCaculationWorker
+import com.matthaug.taskmanager.services.OverdueCheckService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,9 +36,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 
-// Add this to the top of MainFragment
-private val fragmentJob = SupervisorJob()
-private val fragmentScope = CoroutineScope(Dispatchers.Main + fragmentJob)
 
 // file name where we are saving tasks
 private const val FILE_NAME = "tasks.json"
@@ -102,6 +107,9 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
         loadDefaultsButton.setOnClickListener {
             loadDefaultTasks()
         }
+
+
+
 
 
 
@@ -206,7 +214,33 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
                 }
 
                 saveTasksToFile()
+
+                //Trigger the service on creation AFTER the view is created
+                val serviceIntent = Intent(requireContext(), OverdueCheckService::class.java)
+                ContextCompat.startForegroundService(requireContext(), serviceIntent)
+
+                // Schedule periodic cost calculation with WorkManager
+                val workRequest = PeriodicWorkRequestBuilder<CostCaculationWorker>(
+                    15, TimeUnit.MINUTES // Change to 1 minute for testing (15 is min)
+                )
+                    .setConstraints(
+                        Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+                            .build()
+                    )
+                    .build()
+
+                WorkManager.getInstance(requireContext()).enqueueUniquePeriodicWork(
+                    "costCalculationWork",
+                    ExistingPeriodicWorkPolicy.KEEP, // prevent duplicates
+                    workRequest
+                )
             }
+
+        //One time work request to see it happen
+        val request = OneTimeWorkRequestBuilder<CostCaculationWorker>().build()
+        WorkManager.getInstance(requireContext()).enqueue(request)
+
     }
     //for the you have no tasks message
     private fun updatePlaceholderVisibility() {
@@ -324,7 +358,7 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
                 currency = Currency.getInstance("CAD"),
                 cost = 0.0,
                 completed = false,
-                overdue = false
+                overdue = true
             )
         )
 

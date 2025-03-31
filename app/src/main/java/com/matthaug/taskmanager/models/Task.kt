@@ -8,7 +8,7 @@ data class Task(
     val dueDate: String,
     val priority: String,
     val costAssociated:Boolean,
-    val currency: Currency,
+    val currency: Currency, //Be careful - There is a Java Currency type and an Android Type
     val cost: Double = 0.0,
     val completed: Boolean,
     val overdue: Boolean,

@@ -4,22 +4,46 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Service Permissions -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Foreground permission -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="Task Manager"
         android:theme="@style/Theme.TaskManager">
 
-
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Overdue Task Foreground Service -->
+        <service
+            android:name=".services.OverdueCheckService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+          />
+
+        <!--Receiver-->
+
+        <receiver android:name=".receivers.BatteryLowReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BATTERY_LOW" />
+            </intent-filter>
+        </receiver>
+
+
     </application>
 
 </manifest>
