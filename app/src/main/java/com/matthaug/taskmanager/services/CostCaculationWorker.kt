@@ -26,6 +26,7 @@ class CostCaculationWorker(
 
         // Show notification as this is the end of the work
         showNotification("Weekly Task Summary", "Total Task Cost: $totalCost")
+        //Testing
         Log.d("CostCalculationWorker", "Total cost is: $totalCost")
 
         return Result.success()

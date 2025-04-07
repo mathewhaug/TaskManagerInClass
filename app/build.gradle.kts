@@ -54,6 +54,9 @@ dependencies { // App Level build.gradle.kts
     implementation(libs.androidx.gridlayout)
     //Work Manager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+    //Page3
+    implementation(libs.androidx.paging.runtime.ktx)
+
 
 
 

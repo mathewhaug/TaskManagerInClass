@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity(){
         //Get battery notif channl
         createBatteryChannel()
 
-
+        //This is kind of a cheat, but I don't have a true notif manager setup
         val intent = Intent(this, OverdueCheckService::class.java)
         ContextCompat.startForegroundService(this, intent)
 

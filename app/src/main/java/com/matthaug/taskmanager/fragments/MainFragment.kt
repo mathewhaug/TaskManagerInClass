@@ -16,9 +16,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.matthaug.taskmanager.models.Task
 import android.icu.util.Currency
+import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
@@ -28,6 +31,7 @@ import com.matthaug.taskmanager.TaskAdapter
 import com.matthaug.taskmanager.network.RetrofitInstance
 import com.matthaug.taskmanager.services.CostCaculationWorker
 import com.matthaug.taskmanager.services.OverdueCheckService
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,7 +51,9 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var taskAdapter: TaskAdapter
+    //TaskAdapter no longer needs  a mutable list but we can keep it for use elsewhere
     private val taskList = mutableListOf<Task>()
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -57,8 +63,9 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
 
         recyclerView = view.findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
-
-        taskAdapter = TaskAdapter(taskList, this)
+        //OLD
+       // taskAdapter = TaskAdapter(taskList, this)
+        taskAdapter = TaskAdapter(this)
         recyclerView.adapter = taskAdapter
 
         /*
@@ -75,7 +82,9 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
             }
             taskList.clear()
             taskList.addAll(loadedTasks)
-            taskAdapter.notifyDataSetChanged()
+            //taskAdapter.notifyDataSetChanged()
+            taskAdapter.submitList(taskList.toList())
+
             updatePlaceholderVisibility()
         }
 
@@ -172,14 +181,32 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
         findNavController().navigate(R.id.action_mainFragment_to_addTaskFragment, bundle)
     }
 
-
     override fun onDeleteClick(task: Task) {
-        taskList.remove(task)
-        taskAdapter.notifyDataSetChanged()
-        saveTasksToFile()
-        updatePlaceholderVisibility()
+        val index = taskList.indexOf(task)
+        if (index != -1) {
+            val viewHolder = recyclerView.findViewHolderForAdapterPosition(index)
+            viewHolder?.itemView?.startAnimation(AnimationUtils.loadAnimation(requireContext(), R.anim.slide_out_right))
+            /*
+            You may notice a common problem here is that the recycler view is rebinding
+            the view holder before the animation is done which causes the item to flash.
 
+             This can be fixed by using an item animator approach or pausing the recycler or
+             instructing the recycler that your code is incharge to manually recycle that element
+
+             */
+            viewHolder?.itemView?.postDelayed({
+                taskList.removeAt(index)
+                taskAdapter.submitList(taskList.toList())
+                saveTasksToFile()
+                updatePlaceholderVisibility()
+            }, 300) // match animation duration
+        }
     }
+
+
+
+
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -207,10 +234,12 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
                 val index = taskList.indexOfFirst { it.id.toInt() == newTask.id.toInt() }
                 if (index != -1) {
                     taskList[index] = newTask
-                    taskAdapter.notifyItemChanged(index)
+                    //taskAdapter.notifyItemChanged(index)
+                    taskAdapter.submitList(taskList.toList())
                 } else {
                     taskList.add(newTask)
-                    taskAdapter.notifyItemInserted(taskList.size - 1)
+                    //taskAdapter.notifyItemInserted(taskList.size - 1)
+                    taskAdapter.submitList(taskList.toList())
                 }
 
                 saveTasksToFile()
@@ -221,7 +250,7 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
 
                 // Schedule periodic cost calculation with WorkManager
                 val workRequest = PeriodicWorkRequestBuilder<CostCaculationWorker>(
-                    15, TimeUnit.MINUTES // Change to 1 minute for testing (15 is min)
+                    7, TimeUnit.DAYS // Change to 15 minute for testing (15 is min)
                 )
                     .setConstraints(
                         Constraints.Builder()
@@ -262,6 +291,8 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
             file.writeText(json)
         }
     }
+
+
 
 
     private fun loadTasksFromFile(): MutableList<Task> {
@@ -364,7 +395,9 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
 
         taskList.clear()
         taskList.addAll(defaultTasks)
-        taskAdapter.notifyDataSetChanged()
+        //taskAdapter.notifyDataSetChanged()
+        taskAdapter.submitList(taskList.toList())
+
         saveTasksToFile()
         updatePlaceholderVisibility()
     }

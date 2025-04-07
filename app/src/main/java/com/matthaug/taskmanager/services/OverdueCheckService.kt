@@ -50,7 +50,7 @@ class OverdueCheckService : Service() {
         return NotificationCompat.Builder(this, channelId)
             .setContentTitle("Task Manager Running")
             .setContentText("Checking for overdue tasks...")
-            .setSmallIcon(R.drawable.ic_notification)
+            .setSmallIcon(R.drawable.ic_air_plane)
             .build()
     }
 
