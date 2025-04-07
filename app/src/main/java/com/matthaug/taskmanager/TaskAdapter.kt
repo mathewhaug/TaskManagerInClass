@@ -5,34 +5,30 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.matthaug.taskmanager.models.Task
 
 class TaskAdapter(
     private val listener: TaskItemListener
-) : ListAdapter<Task, TaskAdapter.TaskViewHolder>(TaskDiffCallback()) { //inherit from ListAdapter
-
+) : PagingDataAdapter<Task, TaskAdapter.TaskViewHolder>(TaskDiffCallback()) {
 
     interface TaskItemListener {
         fun onEditClick(task: Task)
         fun onDeleteClick(task: Task)
-        fun onItemClick(task: Task) //details functionality
+        fun onItemClick(task: Task)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
-        val view = LayoutInflater.from(parent.context)
-        .inflate(R.layout.task_item, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.task_item, parent, false)
         return TaskViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
-        //No longer need list
-        holder.bind(getItem(position))
+        val task = getItem(position)
+        task?.let { holder.bind(it) }
     }
-
-//    override fun getItemCount(): Int = taskList.size
 
     inner class TaskViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val taskName: TextView = itemView.findViewById(R.id.taskNameTextView)
@@ -46,28 +42,19 @@ class TaskAdapter(
             taskDueDate.text = task.dueDate
             taskPriority.text = task.priority
 
-            // Handle Edit button click
-            editButton.setOnClickListener {
-                listener.onEditClick(task)
-            }
-
-            // Handle Delete button click
-            deleteButton.setOnClickListener {
-                listener.onDeleteClick(task)
-            }
-
-            itemView.setOnClickListener {
-                listener.onItemClick(task)
-            }
-
+            editButton.setOnClickListener { listener.onEditClick(task) }
+            deleteButton.setOnClickListener { listener.onDeleteClick(task) }
+            itemView.setOnClickListener { listener.onItemClick(task) }
         }
     }
-    //Check item contents
-    class TaskDiffCallback : DiffUtil.ItemCallback<Task>() {
-        override fun areItemsTheSame(oldItem: Task, newItem: Task): Boolean =
-            oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: Task, newItem: Task): Boolean =
-            oldItem == newItem
+    class TaskDiffCallback : DiffUtil.ItemCallback<Task>() {
+        override fun areItemsTheSame(oldItem: Task, newItem: Task): Boolean {
+            return oldItem.id == newItem.id
+        }
+
+        override fun areContentsTheSame(oldItem: Task, newItem: Task): Boolean {
+            return oldItem == newItem
+        }
     }
 }

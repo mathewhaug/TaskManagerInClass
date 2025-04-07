@@ -22,6 +22,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.cachedIn
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.reflect.TypeToken
@@ -39,6 +40,12 @@ import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import com.matthaug.taskmanager.paging.TaskPagingSource
+import kotlinx.coroutines.flow.collectLatest
+import androidx.lifecycle.lifecycleScope
+import androidx.paging.PagingData
+import androidx.paging.PagingDataAdapter
+import androidx.paging.cachedIn
 
 
 // file name where we are saving tasks
@@ -83,7 +90,8 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
             taskList.clear()
             taskList.addAll(loadedTasks)
             //taskAdapter.notifyDataSetChanged()
-            taskAdapter.submitList(taskList.toList())
+            taskAdapter.submitData(lifecycle, pagingData)
+
 
             updatePlaceholderVisibility()
         }
@@ -196,7 +204,8 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
              */
             viewHolder?.itemView?.postDelayed({
                 taskList.removeAt(index)
-                taskAdapter.submitList(taskList.toList())
+                taskAdapter.submitData(lifecycle, pagingData)
+
                 saveTasksToFile()
                 updatePlaceholderVisibility()
             }, 300) // match animation duration
@@ -210,6 +219,20 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Set up Paging
+        val pager = Pager(
+            config = PagingConfig(pageSize = 10),
+            pagingSourceFactory = { TaskPagingSource(taskList) } // taskList is your full list or data source
+        )
+
+        lifecycleScope.launch {
+            pager.flow
+                .cachedIn(lifecycleScope)
+                .collect { pagingData ->
+                    taskAdapter.submitData(pagingData)
+                }
+        }
 
 
         findNavController().currentBackStackEntry?.savedStateHandle
@@ -235,11 +258,11 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
                 if (index != -1) {
                     taskList[index] = newTask
                     //taskAdapter.notifyItemChanged(index)
-                    taskAdapter.submitList(taskList.toList())
+                    taskAdapter.submitData(lifecycle, pagingData)
                 } else {
                     taskList.add(newTask)
                     //taskAdapter.notifyItemInserted(taskList.size - 1)
-                    taskAdapter.submitList(taskList.toList())
+                    taskAdapter.submitData(lifecycle, pagingData)
                 }
 
                 saveTasksToFile()
@@ -292,6 +315,11 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
         }
     }
 
+
+    //Call the pager, should be done in ViewModel but this is a simple app
+    val pager = Pager(PagingConfig(pageSize = 5)) {
+        TaskPagingSource(taskList) // pass in your full task list
+    }.flow.cachedIn(lifecycleScope)
 
 
 
@@ -396,7 +424,7 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
         taskList.clear()
         taskList.addAll(defaultTasks)
         //taskAdapter.notifyDataSetChanged()
-        taskAdapter.submitList(taskList.toList())
+        taskAdapter.submitData(lifecycle, pagingData)
 
         saveTasksToFile()
         updatePlaceholderVisibility()
