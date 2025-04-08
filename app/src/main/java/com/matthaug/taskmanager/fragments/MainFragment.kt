@@ -90,7 +90,7 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
             taskList.clear()
             taskList.addAll(loadedTasks)
             //taskAdapter.notifyDataSetChanged()
-            taskAdapter.submitData(lifecycle, pagingData)
+
 
 
             updatePlaceholderVisibility()
@@ -204,7 +204,7 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
              */
             viewHolder?.itemView?.postDelayed({
                 taskList.removeAt(index)
-                taskAdapter.submitData(lifecycle, pagingData)
+
 
                 saveTasksToFile()
                 updatePlaceholderVisibility()
@@ -258,11 +258,11 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
                 if (index != -1) {
                     taskList[index] = newTask
                     //taskAdapter.notifyItemChanged(index)
-                    taskAdapter.submitData(lifecycle, pagingData)
+
                 } else {
                     taskList.add(newTask)
                     //taskAdapter.notifyItemInserted(taskList.size - 1)
-                    taskAdapter.submitData(lifecycle, pagingData)
+
                 }
 
                 saveTasksToFile()
@@ -424,7 +424,7 @@ class MainFragment : Fragment(), TaskAdapter.TaskItemListener {
         taskList.clear()
         taskList.addAll(defaultTasks)
         //taskAdapter.notifyDataSetChanged()
-        taskAdapter.submitData(lifecycle, pagingData)
+
 
         saveTasksToFile()
         updatePlaceholderVisibility()
